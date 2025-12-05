@@ -1,0 +1,32 @@
+# Fichiers et dossiers à ignorer
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Fichiers de test (ne pas publier de vraies données)
+*.zip
+test_data/
+samples/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+ehthumbs.db
+
+# Fichiers de backup
+*.bak
+*.orig

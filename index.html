@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRACE - Analyseur d'Erreurs Multi-Périodes</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-graph-up"></i> GRACE Analyzer
+            </a>
+            <span class="navbar-text text-white">
+                Analyse Multi-Périodes des Erreurs PM
+            </span>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Zone de chargement des fichiers -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-file-earmark-zip"></i> Chargement des fichiers</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Fichiers ZIP des rapports d'erreurs</label>
+                                <input type="file" id="zipFiles" class="form-control" multiple accept=".zip">
+                                <small class="text-muted">Sélectionnez plusieurs fichiers ZIP contenant les rapports d'erreurs</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fichier de référence des erreurs (optionnel)</label>
+                                <input type="file" id="referenceFile" class="form-control" accept=".xlsx,.xls,.csv">
+                                <small class="text-muted">Liste des codes erreur pour classification automatique</small>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button id="analyzeBtn" class="btn btn-primary" disabled>
+                                <i class="bi bi-play-fill"></i> Analyser les fichiers
+                            </button>
+                            <button id="resetBtn" class="btn btn-secondary">
+                                <i class="bi bi-arrow-clockwise"></i> Réinitialiser
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zone de filtrage -->
+        <div class="row mb-4" id="filterSection" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtres</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Sélectionner les PM à analyser</label>
+                                <select id="pmFilter" class="form-select" multiple size="5">
+                                    <!-- Options ajoutées dynamiquement -->
+                                </select>
+                                <small class="text-muted">Ctrl+Click pour sélection multiple</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Filtrer par famille d'erreur</label>
+                                <div id="familyFilters">
+                                    <!-- Checkboxes ajoutées dynamiquement -->
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Options d'analyse</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="showDetails" checked>
+                                    <label class="form-check-label" for="showDetails">
+                                        Afficher le détail des codes erreur
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="showCharts" checked>
+                                    <label class="form-check-label" for="showCharts">
+                                        Inclure les graphiques d'évolution
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="showPercentages" checked>
+                                    <label class="form-check-label" for="showPercentages">
+                                        Calculer les pourcentages d'évolution
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button id="analyzeAndVisualize" class="btn btn-primary" disabled>
+                                <i class="bi bi-search"></i> Analyser et visualiser
+                            </button>
+                            <button id="generateReportBtn" class="btn btn-success" disabled>
+                                <i class="bi bi-file-earmark-excel"></i> Exporter en Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zone de progression -->
+        <div class="row mb-4" id="progressSection" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 id="progressText">Traitement en cours...</h6>
+                        <div class="progress">
+                            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small id="progressDetails" class="text-muted"></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zone de résultats avec onglets -->
+        <div class="row" id="resultsSection" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Résultats de l'analyse</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Onglets Navigation -->
+                        <ul class="nav nav-tabs" id="resultTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="raw-data-tab" data-bs-toggle="tab" data-bs-target="#raw-data" type="button" role="tab">
+                                    <i class="bi bi-table"></i> Données brutes
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="comparison-tab" data-bs-toggle="tab" data-bs-target="#comparison" type="button" role="tab">
+                                    <i class="bi bi-graph-up-arrow"></i> Comparatif temporel
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts" type="button" role="tab">
+                                    <i class="bi bi-bar-chart"></i> Graphiques
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <!-- Contenu des onglets -->
+                        <div class="tab-content" id="resultTabContent">
+                            <!-- Onglet 1: Données brutes -->
+                            <div class="tab-pane fade show active" id="raw-data" role="tabpanel">
+                                <div class="mt-3">
+                                    <h6><i class="bi bi-database"></i> Données concaténées (Colonnes A-O)</h6>
+                                    <div id="rawDataContent">
+                                        <!-- Tableau des données brutes -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Onglet 2: Comparatif temporel -->
+                            <div class="tab-pane fade" id="comparison" role="tabpanel">
+                                <div class="mt-3">
+                                    <h6><i class="bi bi-arrows-expand"></i> Évolution des erreurs par période</h6>
+                                    <div id="comparisonContent">
+                                        <!-- Tableau de comparaison temporelle -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Onglet 3: Graphiques -->
+                            <div class="tab-pane fade" id="charts" role="tabpanel">
+                                <div class="mt-3">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Filtrer par PM</label>
+                                            <select id="chartPmFilter" class="form-select">
+                                                <option value="">Tous les PM</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Filtrer par famille d'erreur</label>
+                                            <select id="chartFamilyFilter" class="form-select">
+                                                <option value="">Toutes les familles</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Filtrer par code d'erreur</label>
+                                            <select id="chartErrorCodeFilter" class="form-select">
+                                                <option value="">Tous les codes</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Type d'affichage</label>
+                                            <select id="chartDisplayType" class="form-select">
+                                                <option value="comparison">Comparaison Ancienne/Nouvelle</option>
+                                                <option value="evolution">Évolution temporelle</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div id="chartsContent">
+                                        <h6 id="chartTitle">Comparaison des erreurs par famille</h6>
+                                        <div style="height: 250px; width: 100%;">
+                                            <canvas id="mainChart" style="max-height: 250px;"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour les erreurs -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Erreur</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="errorMessage">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
