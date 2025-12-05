@@ -87,6 +87,18 @@
 .table thead th {
     position: sticky;
     top: 0;
-    background-color: white;
     z-index: 10;
+}
+
+/* Headers avec fond sombre pour table-dark */
+.table-dark thead th {
+    background-color: #212529 !important;
+    color: white !important;
+    border-color: #32383e !important;
+}
+
+/* Headers normaux pour autres tables */
+.table:not(.table-dark) thead th {
+    background-color: white !important;
+    color: #212529 !important;
 }
