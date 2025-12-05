@@ -478,6 +478,8 @@ class GraceAnalyzer {
         this.errorFamilies['AUTRES'] = [];
         
         console.log(`${Object.keys(this.errorCodeToFamily).length} codes d'erreur intégrés avec leurs familles`);
+        console.log('Familles disponibles:', Object.keys(this.errorFamilies));
+        console.log('Exemple de mapping:', Object.entries(this.errorCodeToFamily).slice(0, 5));
     }
 
     checkReadyState() {
@@ -897,24 +899,31 @@ class GraceAnalyzer {
     }
 
     classifyError(errorCode) {
+        // Debug des codes d'erreur
+        console.log('Classification du code:', errorCode);
+        
         // Utiliser d'abord le mapping exact du fichier FAMILLE.csv
         if (this.errorCodeToFamily && this.errorCodeToFamily[errorCode]) {
+            console.log('Trouvé via mapping exact:', this.errorCodeToFamily[errorCode]);
             return this.errorCodeToFamily[errorCode];
         }
         
         // Fallback: classification par mots-clés
         const upperCode = errorCode.toUpperCase();
+        console.log('Code en majuscules:', upperCode);
         
         for (const [family, keywords] of Object.entries(this.errorFamilies)) {
             if (family !== 'AUTRES' && keywords.length > 0) {
                 for (const keyword of keywords) {
                     if (upperCode.includes(keyword)) {
+                        console.log('Trouvé via mot-clé:', keyword, '→', family);
                         return family;
                     }
                 }
             }
         }
         
+        console.log('Aucune famille trouvée, classification AUTRES');
         return 'AUTRES';
     }
 
@@ -1452,11 +1461,16 @@ class GraceAnalyzer {
             this.selectedFamilies.includes(record.errorFamily)
         );
 
+        // Debug pour les en-têtes
+        console.log('csvHeaders disponibles:', this.csvHeaders);
+        
         // Créer le tableau avec les 15 colonnes (vrais en-têtes ou A-O)
         const csvHeaders = this.csvHeaders && this.csvHeaders.length >= 15 
             ? this.csvHeaders.slice(0, 15) 
             : ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'];
         const headers = csvHeaders;
+        
+        console.log('En-têtes utilisés:', headers);
         
         let tableHTML = `
             <div class="table-responsive">
