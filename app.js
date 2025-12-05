@@ -902,6 +902,14 @@ class GraceAnalyzer {
     classifyError(errorCode) {
         // Debug des codes d'erreur
         console.log('Classification du code:', errorCode);
+        console.log('Mapping disponible:', !!this.errorCodeToFamily);
+        console.log('Nombre de codes dans mapping:', Object.keys(this.errorCodeToFamily || {}).length);
+        
+        // Vérifier si TRANCHEE_76_H est bien dans le mapping
+        if (errorCode === 'TRANCHEE_76_H') {
+            console.log('TRANCHEE_76_H dans mapping:', this.errorCodeToFamily['TRANCHEE_76_H']);
+            console.log('Quelques codes TRANCHEE:', Object.keys(this.errorCodeToFamily || {}).filter(k => k.includes('TRANCHEE')).slice(0, 5));
+        }
         
         // Utiliser d'abord le mapping exact du fichier FAMILLE.csv
         if (this.errorCodeToFamily && this.errorCodeToFamily[errorCode]) {
@@ -1470,9 +1478,14 @@ class GraceAnalyzer {
             ? this.csvHeaders.slice(0, 15) 
             : ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'];
         
+        // Debug pour BOM
+        console.log('Premier en-tête avant nettoyage:', JSON.stringify(csvHeaders[0]));
+        console.log('Contient BOM:', csvHeaders[0] && csvHeaders[0].startsWith('\ufeff'));
+        
         // Supprimer le BOM du premier en-tête si présent
         if (csvHeaders[0] && csvHeaders[0].startsWith('\ufeff')) {
             csvHeaders[0] = csvHeaders[0].substring(1);
+            console.log('BOM supprimé, nouveau header:', JSON.stringify(csvHeaders[0]));
         }
         
         const headers = csvHeaders;
