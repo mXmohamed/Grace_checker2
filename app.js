@@ -57,44 +57,10 @@ class GraceAnalyzer {
         e.stopPropagation();
     }
 
-    async initializeErrorFamilies() {
-        // Charger le mapping depuis FAMILLE.csv
-        try {
-            const response = await fetch('./FAMILLE.csv');
-            const csvText = await response.text();
-            
-            Papa.parse(csvText, {
-                delimiter: ';',
-                header: true,
-                skipEmptyLines: true,
-                complete: (results) => {
-                    this.errorCodeToFamily = {};
-                    this.errorFamilies = {};
-                    
-                    results.data.forEach(row => {
-                        const code = row.CODE_ERREUR?.trim();
-                        const family = row.FAMILLE?.trim();
-                        
-                        if (code && family) {
-                            this.errorCodeToFamily[code] = family;
-                            
-                            // Construire la liste des familles uniques
-                            if (!this.errorFamilies[family]) {
-                                this.errorFamilies[family] = [];
-                            }
-                        }
-                    });
-                    
-                    // Ajouter AUTRES pour les codes non trouvés
-                    this.errorFamilies['AUTRES'] = [];
-                    
-                    console.log(`Chargé ${Object.keys(this.errorCodeToFamily).length} codes d'erreur avec leurs familles`);
-                }
-            });
-        } catch (error) {
-            console.warn('Impossible de charger FAMILLE.csv, utilisation des familles par défaut');
-            this.initializeDefaultFamilies();
-        }
+    initializeErrorFamilies() {
+        // Utiliser directement les familles intégrées dans l'application
+        console.log('Initialisation des familles d\'erreur intégrées...');
+        this.initializeDefaultFamilies();
     }
 
     initializeDefaultFamilies() {
