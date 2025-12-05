@@ -1482,11 +1482,20 @@ class GraceAnalyzer {
         console.log('Premier en-tête avant nettoyage:', JSON.stringify(csvHeaders[0]));
         console.log('Contient BOM:', csvHeaders[0] && csvHeaders[0].startsWith('\ufeff'));
         
-        // Supprimer le BOM du premier en-tête si présent
+        // Supprimer le BOM du premier en-tête si présent  
         if (csvHeaders[0] && csvHeaders[0].startsWith('\ufeff')) {
             csvHeaders[0] = csvHeaders[0].substring(1);
             console.log('BOM supprimé, nouveau header:', JSON.stringify(csvHeaders[0]));
         }
+        
+        // Nettoyer tous les en-têtes de caractères invisibles
+        csvHeaders = csvHeaders.map(header => {
+            if (typeof header === 'string') {
+                // Supprimer BOM et autres caractères invisibles
+                return header.replace(/[\ufeff\u200b-\u200d\u00a0]/g, '').trim();
+            }
+            return header;
+        });
         
         const headers = csvHeaders;
         
